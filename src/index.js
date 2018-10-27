@@ -1,25 +1,39 @@
 const express = require('express');
+const cors = require('cors');
 const { ApolloServer, gql } = require('apollo-server-express');
 
 const app = express();
+app.use(cors());
 
 const schema = gql`
   type Query {
     me: User
+    user(id: ID!): User
+    users: [User!]
   }
 
   type User {
+    id: ID!
     username: String!
   }
 `;
 
+const users = {
+  1: {
+    id: '1',
+    username: 'Sherman Chen'
+  },
+  2: {
+    id: '2',
+    username: 'Robin Wieruch'
+  }
+};
+
 const resolvers = {
   Query: {
-    me: () => {
-      return {
-        username: 'Sherman Chen'
-      };
-    }
+    me: () => users[1],
+    user: (parents, { id }) => users[id],
+    users: () => Object.values(users)
   }
 };
 
