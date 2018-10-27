@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { ApolloServer, gql } = require('apollo-server-express');
+const uuid = require('uuid/v4');
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,12 @@ const schema = gql`
 
     messages: [Message!]!
     message(id: ID!): Message!
+  }
+
+  type Mutation {
+    createMessage(text: String!): Message!
+    deleteMessage(id: ID!): Boolean!
+    updateMessage(id: ID!, text: String!): Message!
   }
 
   type User {
@@ -41,7 +48,7 @@ const users = {
   }
 };
 
-const messages = {
+let messages = {
   1: {
     id: '1',
     text: 'Hello World',
@@ -61,6 +68,43 @@ const resolvers = {
     me: (parent, args, { me }) => me,
     messages: () => Object.values(messages),
     message: (parent, { id }) => messages[id]
+  },
+
+  Mutation: {
+    createMessage: (parent, { text }, { me }) => {
+      const id = uuid();
+      const message = {
+        id,
+        text,
+        userId: me.id
+      };
+
+      messages[id] = message;
+      users[me.id].messageIds.push(id);
+
+      return message;
+    },
+
+    deleteMessage: (parent, { id }) => {
+      const { [id]: message, ...otherMessages } = messages;
+
+      if (!message) {
+        return false;
+      }
+
+      messages = otherMessages;
+
+      return true;
+    },
+
+    updateMessage: (parent, { id, text }) => {
+      // assume message always exists
+      const { [id]: message, ...otherMessages } = messages;
+
+      message.text = text;
+
+      return Object.assign({}, messages, message);
+    }
   },
 
   User: {
