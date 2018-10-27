@@ -7,41 +7,73 @@ app.use(cors());
 
 const schema = gql`
   type Query {
-    me: User
-    user(id: ID!): User
     users: [User!]
+    user(id: ID!): User
+    me: User
+
+    messages: [Message!]!
+    message(id: ID!): Message!
   }
 
   type User {
     id: ID!
     username: String!
+    messages: [Message!]
+  }
+
+  type Message {
+    id: ID!
+    text: String!
+    user: User!
   }
 `;
 
 const users = {
   1: {
     id: '1',
-    username: 'Sherman Chen'
+    username: 'Sherman Chen',
+    messageIds: [1]
   },
   2: {
     id: '2',
-    username: 'Robin Wieruch'
+    username: 'Robin Wieruch',
+    messageIds: [2]
+  }
+};
+
+const messages = {
+  1: {
+    id: '1',
+    text: 'Hello World',
+    userId: '1'
   },
-  3: {
-    id: '3',
-    username: 'kermit the frog'
+  2: {
+    id: '2',
+    text: 'Bye World',
+    userId: '1'
   }
 };
 
 const resolvers = {
   Query: {
-    me: (parent, args, { me }) => me,
+    users: () => Object.values(users),
     user: (parents, { id }) => users[id],
-    users: () => Object.values(users)
+    me: (parent, args, { me }) => me,
+    messages: () => Object.values(messages),
+    message: (parent, { id }) => messages[id]
   },
 
   User: {
-    username: parent => parent.username
+    username: parent => parent.username,
+    messages: user => {
+      return Object.values(messages).filter(
+        message => message.userId === user.id
+      );
+    }
+  },
+
+  Message: {
+    user: message => users[message.userId]
   }
 };
 
