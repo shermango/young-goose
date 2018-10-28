@@ -1,13 +1,29 @@
 const express = require('express');
 const cors = require('cors');
-const { ApolloServer } = require('apollo-server-express');
+const jwt = require('jsonwebtoken');
+const { ApolloServer, AuthenticationError } = require('apollo-server-express');
 
 const schema = require('./schema');
 const resolvers = require('./resolvers');
 const models = require('./models');
 
 const app = express();
+const BAD_SECRET = 'env variables what are those';
 app.use(cors());
+
+const getMe = async req => {
+  const token = req.headers['x-token'];
+
+  if (token) {
+    try {
+      return await jwt.verify(token, BAD_SECRET);
+    } catch (e) {
+      throw new AuthenticationError(
+        'Your session has expired. Please sign in again'
+      );
+    }
+  }
+};
 
 const server = new ApolloServer({
   typeDefs: schema,
@@ -22,11 +38,15 @@ const server = new ApolloServer({
       message
     };
   },
-  context: async () => ({
-    models,
-    me: await models.User.findByLogin('schen'),
-    secret: 'hot cheetos'
-  })
+  context: async ({ req }) => {
+    const me = await getMe(req);
+
+    return {
+      models,
+      me,
+      secret: BAD_SECRET
+    };
+  }
 });
 
 server.applyMiddleware({ app, path: '/graphql' });
@@ -49,7 +69,8 @@ const seedData = async () => {
       username: 'schen',
       email: 'sherm@chen.com',
       password: 'supersecure',
-      messages: [{ text: 'jello squirrel d00d' }]
+      messages: [{ text: 'jello squirrel d00d' }],
+      role: 'ADMIN'
     },
     { include: [models.Message] }
   );
@@ -62,7 +83,8 @@ const seedData = async () => {
       messages: [
         { text: 'Published the Road to learn React' },
         { text: 'wrote a graphql tutorial' }
-      ]
+      ],
+      role: 'USER'
     },
     { include: [models.Message] }
   );
