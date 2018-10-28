@@ -12,14 +12,43 @@ app.use(cors());
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
-  context: {
+  context: async () => ({
     models,
-    me: models.users[1]
-  }
+    me: await models.User.findByLogin('schen')
+  })
 });
 
 server.applyMiddleware({ app, path: '/graphql' });
 
-app.listen(5150, () => {
-  console.log('apollo server started on port 5150/graphql');
+const eraseDatabaseOnSync = true;
+
+models.sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
+  if (eraseDatabaseOnSync) {
+    seedData();
+  }
+
+  app.listen(5150, () => {
+    console.log('apollo server started on port 5150/graphql');
+  });
 });
+
+const seedData = async () => {
+  await models.User.create(
+    {
+      username: 'schen',
+      messages: [{ text: 'jello squirrel d00d' }]
+    },
+    { include: [models.Message] }
+  );
+
+  await models.User.create(
+    {
+      username: 'rwieruch',
+      messages: [
+        { text: 'Published the Road to learn React' },
+        { text: 'wrote a graphql tutorial' }
+      ]
+    },
+    { include: [models.Message] }
+  );
+};

@@ -1,30 +1,21 @@
-let users = {
-  1: {
-    id: '1',
-    username: 'Sherman Chen',
-    messageIds: [1]
-  },
-  2: {
-    id: '2',
-    username: 'Robin Wieruch',
-    messageIds: [2]
-  }
+const Sequelize = require('sequelize');
+
+const sequelize = new Sequelize('testdb', 'sherman', 'sherman', {
+  dialect: 'postgres'
+});
+
+const models = {
+  User: sequelize.import('./user'),
+  Message: sequelize.import('./message')
 };
 
-let messages = {
-  1: {
-    id: '1',
-    text: 'Hello World',
-    userId: '1'
-  },
-  2: {
-    id: '2',
-    text: 'Bye World',
-    userId: '1'
+Object.keys(models).forEach(key => {
+  if ('associate' in models[key]) {
+    models[key].associate(models);
   }
-};
+});
 
-module.exports = {
-  users,
-  messages
-};
+models.sequelize = sequelize;
+models.Sequelize = Sequelize;
+
+module.exports = models;
