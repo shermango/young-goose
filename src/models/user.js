@@ -42,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
     return await bcrypt.hash(this.password, SALT);
   };
 
+  User.prototype.validatePassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
+  };
+
   User.findByLogin = async login => {
     let user = await User.findOne({
       where: { username: login }
