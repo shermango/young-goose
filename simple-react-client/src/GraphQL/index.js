@@ -34,6 +34,9 @@ export const query = `
         id
         name
         url
+        stargazers {
+          totalCount
+        }
         viewerHasStarred
         issues(first: 5, after: $cursor, states: [OPEN]) {
           edges {
@@ -57,6 +60,17 @@ export const query = `
             hasNextPage
           }
         }
+      }
+    }
+  }
+`;
+
+// sdl again
+export const mutation = `
+  mutation ($repositoryId: ID!) {
+    addStar(input:{starrableId:$repositoryId}) {
+      starrable {
+        viewerHasStarred
       }
     }
   }

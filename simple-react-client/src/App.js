@@ -1,7 +1,36 @@
 import React, { Component } from 'react';
-import GraphQLClient, { query as getIssuesOfRepositoryQuery } from './GraphQL';
+import GraphQLClient, {
+  query as getIssuesOfRepositoryQuery,
+  mutation as ADD_STAR
+} from './GraphQL';
 
 import Organization from './Organization';
+
+const addStarToRepository = repositoryId => {
+  return GraphQLClient.post('', {
+    query: ADD_STAR,
+    variables: { repositoryId }
+  });
+};
+
+const resolveAddStarMutation = mutationResult => state => {
+  const { viewerHasStarred } = mutationResult.data.data.addStar.starrable;
+  const { totalCount } = state.organization.repository.stargazers;
+
+  return {
+    ...state,
+    organization: {
+      ...state.organization,
+      repository: {
+        ...state.organization.repository,
+        viewerHasStarred,
+        stargazers: {
+          totalCount: totalCount + 1
+        }
+      }
+    }
+  };
+};
 
 const getIssuesOfRepository = (path, cursor) => {
   const [organization, repository] = path.split('/');
@@ -75,6 +104,12 @@ class App extends Component {
     this.onFetchFromGitHub(this.state.path, endCursor);
   };
 
+  onStarRepository = (repositoryId, viewerHasStarred) => {
+    addStarToRepository(repositoryId).then(mutationResult => {
+      this.setState(resolveAddStarMutation(mutationResult));
+    });
+  };
+
   render() {
     const { path, organization, errors } = this.state;
 
@@ -97,7 +132,12 @@ class App extends Component {
         <hr />
 
         {organization && (
-          <Organization organization={organization} errors={errors} />
+          <Organization
+            organization={organization}
+            errors={errors}
+            onFetchMoreIssues={this.onFetchMoreIssues}
+            onStarRepository={this.onStarRepository}
+          />
         )}
       </div>
     );
