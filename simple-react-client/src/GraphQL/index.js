@@ -26,20 +26,35 @@ import GQL_CLIENT from './client';
 // query as defined by SDL
 
 export const query = `
-  query ($organization: String!, $repository: String!) {
+  query ($organization: String!, $repository: String!, $cursor: String) {
     organization(login: $organization) {
       name
       url
       repository(name: $repository) {
+        id
         name
         url
-        issues(last: 5) {
+        viewerHasStarred
+        issues(first: 5, after: $cursor, states: [OPEN]) {
           edges {
             node {
               id
               title
               url
+              reactions(last: 3) {
+                edges {
+                  node {
+                    id
+                    content
+                  }
+                }
+              }
             }
+          }
+          totalCount
+          pageInfo {
+            endCursor
+            hasNextPage
           }
         }
       }

@@ -1,7 +1,47 @@
 import React, { Component } from 'react';
-import GraphQLClient, { query as GET_ISSUES_OF_REPO } from './GraphQL';
+import GraphQLClient, { query as getIssuesOfRepositoryQuery } from './GraphQL';
 
 import Organization from './Organization';
+
+const getIssuesOfRepository = (path, cursor) => {
+  const [organization, repository] = path.split('/');
+
+  return GraphQLClient.post('', {
+    query: getIssuesOfRepositoryQuery,
+    variables: { organization, repository, cursor }
+  });
+};
+
+// returns a set state updater function
+const resolveIssuesQuery = (queryResult, cursor) => state => {
+  const { data, errors } = queryResult.data;
+
+  if (!cursor) {
+    return {
+      organization: data.organization,
+      errors
+    };
+  }
+
+  // add merge in new issues
+  const { edges: oldIssues } = state.organization.repository.issues;
+  const { edges: newIssues } = data.organization.repository.issues;
+  const updatedIssues = [...oldIssues, ...newIssues];
+
+  return {
+    organization: {
+      ...data.organization,
+      repository: {
+        ...data.organization.repository,
+        issues: {
+          ...data.organization.repository.issues,
+          edges: updatedIssues
+        }
+      }
+    },
+    errors
+  };
+};
 
 class App extends Component {
   state = {
@@ -11,7 +51,7 @@ class App extends Component {
   };
 
   componentDidMount = () => {
-    this.fetchGitHub(this.state.path);
+    this.onFetchFromGitHub(this.state.path);
   };
 
   onChange = e => {
@@ -20,21 +60,19 @@ class App extends Component {
 
   onSubmit = e => {
     e.preventDefault();
-    this.fetchGitHub(this.state.path);
+    this.onFetchFromGitHub(this.state.path);
   };
 
-  fetchGitHub = async path => {
-    const [organization, repository] = path.split('/');
-
-    const { data } = await GraphQLClient.post('', {
-      query: GET_ISSUES_OF_REPO,
-      variables: { organization, repository }
+  onFetchFromGitHub = (path, cursor) => {
+    getIssuesOfRepository(path).then(queryResult => {
+      this.setState(resolveIssuesQuery(queryResult, cursor));
     });
+  };
 
-    this.setState(() => ({
-      organization: data.data.organization,
-      errors: data.errors
-    }));
+  onFetchMoreIssues = () => {
+    const { endCursor } = this.state.organization.repository.issues.pageInfo;
+
+    this.onFetchFromGitHub(this.state.path, endCursor);
   };
 
   render() {
