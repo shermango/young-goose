@@ -6,10 +6,23 @@ import withClient from './withClient';
 // this is a implementation of the <Query /> component libraries like Apollo provide
 // uses render prop pattern to provide fetched data to children
 class Query extends React.Component {
+  // assuming <Query /> is created without props it will blow up, so we provide default props
+  // on second thought maybe we want to blow up so dev knows they need to add in props
+  // can probably just add required prop types?
+  // static defaultProps = {
+  //   query: null,
+  //   variables: null,
+  //   resolveFetchMore: () => {},
+  //   client: {
+  //     query: () => {}
+  //   }
+  // };
+
   state = {
     data: null,
     loading: null,
-    errors: null
+    errors: null,
+    fetchMoreLoading: null
   };
 
   // performs a first time query on mount
@@ -46,9 +59,30 @@ class Query extends React.Component {
       );
   };
 
+  // this is for pagination control
+  queryMore = ({ query, variables }) => {
+    this.props.client
+      .query({ query, variables })
+      .then(result =>
+        this.setState(state => ({
+          data: this.props.resolveFetchMore(result.data.data, state),
+          errors: result.data.errors,
+          fetchMoreLoading: false
+        }))
+      )
+      .catch(error =>
+        this.setState({
+          errors: [error],
+          fetchMoreLoading: false
+        })
+      );
+  };
+
+  // we expose pagination control via the fetch more prop func
   render() {
     return this.props.children({
-      ...this.state
+      ...this.state,
+      fetchMore: this.queryMore
     });
   }
 }
