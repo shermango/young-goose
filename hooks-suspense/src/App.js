@@ -4,6 +4,7 @@ import './App.css';
 
 import Stopwatch from './Stopwatch';
 import StopwatchReducer from './StopwatchReducer';
+import Upper from './Upper';
 
 function withCounter(initialState = 0, step = 1) {
   const initialCount = () =>
@@ -30,7 +31,8 @@ class App extends Component {
       <div className="App">
         {/* <Counter /> */}
         {/* <Stopwatch /> */}
-        <StopwatchReducer />
+        {/* <StopwatchReducer /> */}
+        <Upper />
       </div>
     );
   }
