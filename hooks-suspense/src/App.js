@@ -2,6 +2,8 @@ import React, { Component, useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+import Stopwatch from './Stopwatch';
+
 function withCounter(initialState = 0, step = 1) {
   const initialCount = () =>
     parseInt(window.localStorage.getItem('count') || 0);
@@ -25,7 +27,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <Counter />
+        <Stopwatch />
       </div>
     );
   }
