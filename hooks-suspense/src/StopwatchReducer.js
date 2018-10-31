@@ -2,31 +2,12 @@ import React, { useReducer, useRef, useEffect } from 'react';
 
 // useReducer allows for combining multiple state pieces and has a redux like API
 
-const reducer = (state, action) => {
-  switch (action.type) {
-    case 'LAPSE':
-      return {
-        ...state,
-        lapse: action.now - action.startTime
-      };
-    case 'TOGGLE_RUNNING':
-      return {
-        ...state,
-        running: !state.running
-      };
-    case 'CLEAR':
-      return {
-        ...state,
-        running: false,
-        lapse: 0
-      };
-    default:
-      return state;
-  }
+const reducer = (currentState, newState) => {
+  return { ...currentState, ...newState };
 };
 
 const StopwatchReducer = () => {
-  const [{ lapse, running }, dispatch] = useReducer(reducer, {
+  const [{ lapse, running }, setState] = useReducer(reducer, {
     running: false,
     lapse: 0
   });
@@ -49,18 +30,17 @@ const StopwatchReducer = () => {
     } else {
       const startTime = Date.now() - lapse;
 
-      // dispatch is identical to redux dispatch
       intervalRef.current = setInterval(() => {
-        dispatch({ type: 'LAPSE', now: Date.now(), startTime });
+        setState({ lapse: Date.now() - startTime });
       }, 0);
     }
 
-    dispatch({ type: 'TOGGLE_RUNNING' });
+    setState({ running: !running });
   }
 
   function handleClearClick() {
     clearInterval(intervalRef.current);
-    dispatch({ type: 'CLEAR' });
+    setState({ lapse: 0, running: false });
   }
 
   return (
