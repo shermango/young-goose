@@ -1,10 +1,10 @@
 import React, { Component, useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-
-import Stopwatch from './Stopwatch';
+// import Stopwatch from './Stopwatch'; disable this for suspense testing
 import StopwatchReducer from './StopwatchReducer';
 import Upper from './Upper';
+import SuspenseLoader from './SuspenseLoader';
 
 function withCounter(initialState = 0, step = 1) {
   const initialCount = () =>
@@ -32,7 +32,8 @@ class App extends Component {
         {/* <Counter /> */}
         {/* <Stopwatch /> */}
         {/* <StopwatchReducer /> */}
-        <Upper />
+        {/* <Upper /> */}
+        <SuspenseLoader />
       </div>
     );
   }
