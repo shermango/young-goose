@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 import Stopwatch from './Stopwatch';
+import StopwatchReducer from './StopwatchReducer';
 
 function withCounter(initialState = 0, step = 1) {
   const initialCount = () =>
@@ -27,7 +28,9 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <Stopwatch />
+        {/* <Counter /> */}
+        {/* <Stopwatch /> */}
+        <StopwatchReducer />
       </div>
     );
   }
