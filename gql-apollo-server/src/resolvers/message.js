@@ -1,10 +1,25 @@
+const Sequelize = require('sequelize');
 const { combineResolvers } = require('graphql-resolvers');
 const { isAuthenticated, isMessageOwner } = require('./authorization');
 
 module.exports = {
   Query: {
-    messages: async (parents, args, { models }) => {
-      return await models.Message.findAll();
+    messages: async (parents, { cursor, limit = 100 }, { models }) => {
+      const cursorOptions = cursor
+        ? {
+            where: {
+              createdAt: {
+                [Sequelize.Op.lt]: cursor
+              }
+            }
+          }
+        : null;
+
+      return await models.Message.findAll({
+        order: [['createdAt', 'DESC']],
+        limit,
+        ...cursorOptions
+      });
     },
     message: async (parent, { id }, { models }) => {
       return await models.Message.findById(id);
