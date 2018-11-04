@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "bcrypt": "^3.0.2",
     "cors": "^2.8.4",
     "graphql": "^14.0.2",
+    "graphql-iso-date": "^3.6.1",
     "graphql-resolvers": "^0.2.2",
     "jsonwebtoken": "^8.3.0",
     "pg": "^7.6.0",
