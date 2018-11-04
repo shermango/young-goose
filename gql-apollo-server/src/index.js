@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -38,18 +39,31 @@ const server = new ApolloServer({
       message
     };
   },
-  context: async ({ req }) => {
-    const me = await getMe(req);
+  context: async ({ req, connection }) => {
+    // to differentiate between http requests and subscriptons know that
+    // http comes with req/res and subscriptions comes with the ws connection
+    if (connection) {
+      return {
+        models
+      };
+    }
 
-    return {
-      models,
-      me,
-      secret: BAD_SECRET
-    };
+    if (req) {
+      const me = await getMe(req);
+
+      return {
+        models,
+        me,
+        secret: BAD_SECRET
+      };
+    }
   }
 });
 
 server.applyMiddleware({ app, path: '/graphql' });
+
+const httpServer = http.createServer(app);
+server.installSubscriptionHandlers(httpServer);
 
 const eraseDatabaseOnSync = true;
 
@@ -58,7 +72,7 @@ models.sequelize.sync({ force: eraseDatabaseOnSync }).then(async () => {
     createUsersWithMessages(new Date());
   }
 
-  app.listen(5150, () => {
+  httpServer.listen(5150, () => {
     console.log('apollo server started on port 5150/graphql');
   });
 });
