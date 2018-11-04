@@ -3,10 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { ApolloServer, AuthenticationError } = require('apollo-server-express');
+const DataLoader = require('dataloader');
 
 const schema = require('./schema');
 const resolvers = require('./resolvers');
 const models = require('./models');
+const loaders = require('./loaders');
 
 const app = express();
 const BAD_SECRET = 'env variables what are those';
@@ -24,6 +26,18 @@ const getMe = async req => {
       );
     }
   }
+};
+
+const batchUsers = async (keys, models) => {
+  const users = await models.User.findAll({
+    where: {
+      id: {
+        $in: keys
+      }
+    }
+  });
+
+  return keys.map(key => users.find(user => user.id === key));
 };
 
 const server = new ApolloServer({
@@ -44,7 +58,10 @@ const server = new ApolloServer({
     // http comes with req/res and subscriptions comes with the ws connection
     if (connection) {
       return {
-        models
+        models,
+        loaders: {
+          user: new DataLoader(keys => loaders.user.batchUsers(keys, models))
+        }
       };
     }
 
@@ -54,7 +71,10 @@ const server = new ApolloServer({
       return {
         models,
         me,
-        secret: BAD_SECRET
+        secret: BAD_SECRET,
+        loaders: {
+          user: new DataLoader(keys => loaders.user.batchUsers(keys, models))
+        }
       };
     }
   }
